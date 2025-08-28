@@ -16,6 +16,23 @@
 	compatible = "xbrother,rbc02-pro", "rockchip,rk3568";
 
 	aliases {
+		/delete-property/ serial0;
+		/delete-property/ serial1;
+		/delete-property/ serial2;
+		/delete-property/ serial3;
+		/delete-property/ serial4;
+		/delete-property/ serial5;
+		/delete-property/ serial6;
+		/delete-property/ serial7;
+		/delete-property/ serial8;
+		/delete-property/ serial9;
+		serial0 = &uart2;
+		serial1 = &uart0;
+		serial2 = &uart3;
+		serial3 = &uart4;
+		serial4 = &uart5;
+		serial5 = &uart8;
+		serial6 = &uart9;
 		ethernet0 = &gmac0;
 		ethernet1 = &gmac1;
 		mmc0 = &sdmmc0;
@@ -23,7 +40,7 @@
 	};
 
 	chosen: chosen {
-		stdout-path = "serial2:115200n8";
+		stdout-path = "serial0:115200n8";
 	};
 
 	dc_12v: dc-12v {
@@ -38,14 +55,14 @@
 	leds {
 		compatible = "gpio-leds";
 
-		led_work: led-0 {
-			gpios = <&gpio0 RK_PC0 GPIO_ACTIVE_HIGH>;
-			function = LED_FUNCTION_HEARTBEAT;
-			color = <LED_COLOR_ID_BLUE>;
-			linux,default-trigger = "heartbeat";
-			pinctrl-names = "default";
-			pinctrl-0 = <&led_work_en>;
-		};
+		// led_work: led-0 {
+		// 	gpios = <&gpio0 RK_PC0 GPIO_ACTIVE_HIGH>;
+		// 	function = LED_FUNCTION_HEARTBEAT;
+		// 	color = <LED_COLOR_ID_BLUE>;
+		// 	linux,default-trigger = "heartbeat";
+		// 	pinctrl-names = "default";
+		// 	pinctrl-0 = <&led_work_en>;
+		// };
 	};
 
 	
@@ -402,6 +419,7 @@
 
 &mdio1 {
 	rgmii_phy1: ethernet-phy@0 {
+		max-speed = <100>;
 		compatible = "ethernet-phy-ieee802.3-c22";
 		reg = <0x0>;
 		reset-assert-us = <20000>;
@@ -412,16 +430,35 @@
 
 &pinctrl {
 	
-	leds {
-		led_work_en: led_work_en {
-			rockchip,pins = <0 RK_PC0 RK_FUNC_GPIO &pcfg_pull_none>;
-		};
-	};
-
 	pmic {
 		pmic_int: pmic_int {
 			rockchip,pins =
 				<0 RK_PA3 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+	};
+
+	fan_en: fan_en {
+		rockchip,pins = <0 RK_PD5 RK_FUNC_GPIO &pcfg_pull_up>;
+	};
+
+	rs485 {
+		com1_de: com1_de {
+			rockchip,pins = <0 RK_PC3 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+		com2_de: com2_de {
+			rockchip,pins = <3 RK_PA4 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+		com3_de: com3_de {
+			rockchip,pins = <3 RK_PB6 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+		com4_de: com4_de {
+			rockchip,pins = <4 RK_PD2 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+		com5_de: com5_de {
+			rockchip,pins = <3 RK_PA3 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+		com6_de: com6_de {
+			rockchip,pins = <4 RK_PC2 RK_FUNC_GPIO &pcfg_pull_up>;
 		};
 	};
 
@@ -471,6 +508,66 @@
 	rockchip,hw-tshut-mode = <1>;
 	rockchip,hw-tshut-polarity = <0>;
 	status = "okay";
+};
+
+&uart0 {
+	status = "okay";
+	dma-names = "tx","rx";
+	pinctrl-0 = <&uart0_xfer &com1_de>;
+	rs485-term-gpios = <&gpio0 RK_PC3 GPIO_ACTIVE_HIGH>;
+	rs485-rts-delay = <1 5>;
+	rs485-rx-during-tx;
+	linux,rs485-enabled-at-boot-time;
+};
+
+&uart3 {
+	status = "okay";
+	dma-names = "tx","rx";
+	pinctrl-0 = <&uart3m1_xfer &com2_de>;
+	rs485-term-gpios = <&gpio3 RK_PA4 GPIO_ACTIVE_HIGH>;
+	rs485-rts-delay = <1 5>;
+	rs485-rx-during-tx;
+	linux,rs485-enabled-at-boot-time;
+};
+
+&uart4 {
+	status = "okay";
+	dma-names = "tx","rx";
+	pinctrl-0 = <&uart4m1_xfer &com3_de>;
+	rs485-term-gpios = <&gpio3 RK_PB6 GPIO_ACTIVE_HIGH>;
+	rs485-rts-delay = <1 5>;
+	rs485-rx-during-tx;
+	linux,rs485-enabled-at-boot-time;
+};
+
+&uart5 {
+	status = "okay";
+	dma-names = "tx","rx";
+	pinctrl-0 = <&uart5m1_xfer &com4_de>;
+	rs485-term-gpios = <&gpio4 RK_PD2 GPIO_ACTIVE_HIGH>;
+	rs485-rts-delay = <1 5>;
+	rs485-rx-during-tx;
+	linux,rs485-enabled-at-boot-time;
+};
+
+&uart8 {
+	status = "okay";
+	dma-names = "tx","rx";
+	pinctrl-0 = <&uart8m1_xfer &com5_de>;
+	rs485-term-gpios = <&gpio3 RK_PA3 GPIO_ACTIVE_HIGH>;
+	rs485-rts-delay = <1 5>;
+	rs485-rx-during-tx;
+	linux,rs485-enabled-at-boot-time;
+};
+
+&uart9 {
+	status = "okay";
+	dma-names = "tx","rx";
+	pinctrl-0 = <&uart9m1_xfer &com6_de>;
+	rs485-term-gpios = <&gpio4 RK_PC2 GPIO_ACTIVE_HIGH>;
+	rs485-rts-delay = <1 5>;
+	rs485-rx-during-tx;
+	linux,rs485-enabled-at-boot-time;
 };
 
 &uart2 {
