@@ -409,6 +409,7 @@
 
 &mdio0 {
 	rgmii_phy0: ethernet-phy@0 {
+		max-speed = <100>;
 		compatible = "ethernet-phy-ieee802.3-c22";
 		reg = <0x0>;
 		reset-assert-us = <20000>;
@@ -419,7 +420,6 @@
 
 &mdio1 {
 	rgmii_phy1: ethernet-phy@0 {
-		max-speed = <100>;
 		compatible = "ethernet-phy-ieee802.3-c22";
 		reg = <0x0>;
 		reset-assert-us = <20000>;
