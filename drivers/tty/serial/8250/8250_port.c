@@ -612,6 +612,7 @@ int serial8250_em485_config(struct uart_port *port, struct ktermios *termios,
 {
 	struct uart_8250_port *up = up_to_u8250p(port);
 
+	gpiod_set_value_cansleep(port->rs485_term_gpio,0);
 	/*
 	 * Both serial8250_em485_init() and serial8250_em485_destroy()
 	 * are idempotent.
@@ -1395,6 +1396,7 @@ void serial8250_em485_stop_tx(struct uart_8250_port *p)
 		mcr &= ~UART_MCR_RTS;
 	serial8250_out_MCR(p, mcr);
 
+	gpiod_set_value_cansleep(p->port.rs485_term_gpio,0);
 	/*
 	 * Empty the RX FIFO, we are not interested in anything
 	 * received during the half-duplex transmission.
@@ -1568,6 +1570,7 @@ static bool start_tx_rs485(struct uart_port *port)
 	struct uart_8250_port *up = up_to_u8250p(port);
 	struct uart_8250_em485 *em485 = up->em485;
 
+	gpiod_set_value_cansleep(port->rs485_term_gpio,1);
 	/*
 	 * While serial8250_em485_handle_stop_tx() is a noop if
 	 * em485->active_timer != &em485->stop_tx_timer, it might happen that
