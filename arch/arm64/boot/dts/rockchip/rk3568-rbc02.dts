@@ -112,6 +112,10 @@
 	status = "okay";
 };
 
+&combphy2 {
+	status = "okay";
+};
+
 &cpu0 {
 	cpu-supply = <&vdd_cpu>;
 };
@@ -571,7 +575,6 @@
 };
 
 &usb_host0_xhci {
-	extcon = <&usb2phy0>;
 	status = "okay";
 };
 
