@@ -575,6 +575,8 @@
 };
 
 &usb_host0_xhci {
+	dr_mode = "host";
+	extcon = <&usb2phy0>;
 	status = "okay";
 };
 
