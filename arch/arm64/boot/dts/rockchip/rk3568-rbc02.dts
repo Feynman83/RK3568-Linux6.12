@@ -414,13 +414,44 @@
 	};
 };
 
+&i2c1_xfer {
+	rockchip,pins =
+		/* i2c1_scl */
+		<0 RK_PB3 RK_FUNC_GPIO &pcfg_pull_up_drv_level_15>,
+		/* i2c1_sda */
+		<0 RK_PB4 RK_FUNC_GPIO &pcfg_pull_up_drv_level_15>;
+};
 &i2c1 {
 	status = "okay";
+	compatible = "i2c-gpio";
+	sda-gpios = <&gpio0 11 GPIO_ACTIVE_HIGH>;
+	scl-gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c1_xfer>;
+	i2c-gpio,delay-us = <5>;	/* ~100 kHz */
+	#address-cells = <1>;
+	#size-cells = <0>;
 
-	
+	eeprom@50 {
+		compatible = "atmel,24c04";
+		reg = <0x50>;
+		pagesize = <16>;
+	};
+	ds1307: rtc@68 {
+		compatible = "dallas,ds1307";
+		reg = <0x68>;
+	};
 };
 
+&i2c2 {
+	status = "okay";
+	clock-frequency = <100000>;
+};
 
+&i2c5 {
+	status = "okay";
+	clock-frequency = <100000>;
+};
 
 &mdio0 {
 	rgmii_phy0: ethernet-phy@0 {
