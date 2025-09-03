@@ -7,10 +7,10 @@
 #include <linux/gpio.h>
 #include <linux/device.h>
 
-#define DRIVER_NAME "gpio-export"
+#define DRIVER_NAME "Xbrother-GPIO"
 
 static struct of_device_id gpio_export_ids[] = {
-    { .compatible = "gpio-export" },
+    { .compatible = "xbrother,gpio" },
     { /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, gpio_export_ids);
@@ -51,63 +51,60 @@ static int __init of_gpio_export_probe(struct platform_device *pdev)
     
     /* 处理每个子节点 */
     for_each_child_of_node(np, child) {
-        const char *name = NULL;
-        int max_gpio, i;
+        const char *label = NULL;
+		const char *direction = NULL;
+		unsigned int flags = 0;
+		int gpio;
+        of_property_read_string(child, "label", &label);
         
-        of_property_read_string(child, "gpio-export,name", &name);
+		if(label==NULL) continue; // 如果没有label属性则跳过
+
+		gpio = of_get_named_gpio(child, "gpios", 0);
+		if (!gpio_is_valid(gpio)) {
+			dev_warn(&pdev->dev, "Invalid GPIO in node %s\n",of_node_full_name(child));
+			continue;
+		}
+		bool dmc;
+		
+				
+		if (!of_property_read_string(child, "direction", &direction)) {
+			if (strcmp(direction, "high") == 0) {
+				flags |= GPIOF_OUT_INIT_HIGH;
+			} else if (strcmp(direction, "low") == 0) {
+				flags |= GPIOF_OUT_INIT_LOW;
+			} else if (strcmp(direction, "input") == 0) {
+				flags |= GPIOF_IN;
+			} else {
+				dev_warn(&pdev->dev, "Invalid direction '%s' in node %s\n",direction, of_node_full_name(child));
+				continue;
+			}
+		} else{
+			flags |= GPIOF_IN;
+		}
+		
+		/* 请求GPIO */
+		err = devm_gpio_request_one(&pdev->dev, gpio, flags, label);
+		if (err) {
+			dev_warn(&pdev->dev, "Failed to request GPIO %d: %d\n", gpio, err);
+			continue;
+		}
+		
+		/* 导出GPIO */
+		dmc = of_property_read_bool(child, "direction_may_change");
+		err = gpiod_export(gpio_to_desc(gpio), dmc); // 使用gpiod_export
+		if (err) {
+			dev_warn(&pdev->dev, "Failed to export GPIO %d: %d\n",gpio, err);
+			continue;
+		}
+		
+		err = gpiod_export_link(gpio_dev, label, gpio_to_desc(gpio)); // 使用gpiod_export_link
+		if (err) {
+			dev_warn(&pdev->dev, 
+						"Failed to create export link for GPIO %d: %d\n", 
+						gpio, err);
+		}
+        nb++;
         
-        // 使用gpiod_count替代of_gpio_count
-        max_gpio = name ? 1 : gpiod_count(&pdev->dev, NULL);
-        
-        for (i = 0; i < max_gpio; i++) {
-            unsigned int flags = 0;
-            u32 val;
-            int gpio;
-            bool dmc;
-            
-            // 使用of_get_named_gpio_flags替代of_get_gpio_flags
-            gpio = of_get_named_gpio(child, "gpios", i);
-            if (!gpio_is_valid(gpio)) {
-                dev_warn(&pdev->dev, "Invalid GPIO in node %s\n", 
-                         of_node_full_name(child));
-                continue;
-            }
-                 
-            if (!of_property_read_u32(child, "gpio-export,output", &val))
-                flags |= val ? GPIOF_OUT_INIT_HIGH : GPIOF_OUT_INIT_LOW;
-            else
-                flags |= GPIOF_IN;
-            
-            /* 请求GPIO */
-            err = devm_gpio_request_one(&pdev->dev, gpio, flags, 
-                                       name ? name : of_node_full_name(child));
-            if (err) {
-                dev_warn(&pdev->dev, "Failed to request GPIO %d: %d\n", 
-                         gpio, err);
-                continue;
-            }
-            
-            /* 导出GPIO */
-            dmc = of_property_read_bool(child, "gpio-export,direction_may_change");
-            err = gpiod_export(gpio_to_desc(gpio), dmc); // 使用gpiod_export
-            if (err) {
-                dev_warn(&pdev->dev, "Failed to export GPIO %d: %d\n", 
-                         gpio, err);
-                continue;
-            }
-            
-            /* 创建GPIO链接 */
-            if (name) {
-                err = gpiod_export_link(gpio_dev, name, gpio_to_desc(gpio)); // 使用gpiod_export_link
-                if (err) {
-                    dev_warn(&pdev->dev, 
-                             "Failed to create export link for GPIO %d: %d\n", 
-                             gpio, err);
-                }
-            }
-            
-            nb++;
-        }
     }
     
     dev_info(&pdev->dev, "%d GPIO(s) exported\n", nb);

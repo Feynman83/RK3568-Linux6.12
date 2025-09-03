@@ -57,82 +57,93 @@
 	};
 
 	xbrother_gpio {
-		compatible = "gpio-export";
+		compatible = "xbrother,gpio";
 		#size-cells = <0>;
 		sys_name = "xbrother";
 		di08 {
-			gpio-export,name = "di08";
+			label = "di08";
 			gpios = <&tca6424 0 GPIO_ACTIVE_LOW>;
+			direction = "input";
 		};
 		di07 {
-			gpio-export,name = "di07";
+			label = "di07";
 			gpios = <&tca6424 1 GPIO_ACTIVE_LOW>;
+			direction = "input";
 		};
 		di06 {
-			gpio-export,name = "di06";
+			label = "di06";
 			gpios = <&tca6424 2 GPIO_ACTIVE_LOW>;
+			direction = "input";
 		};
 		di05 {
-			gpio-export,name = "di05";
+			label = "di05";
 			gpios = <&tca6424 3 GPIO_ACTIVE_LOW>;
+			direction = "input";
 		};
 		di04 {
-			gpio-export,name = "di04";
+			label = "di04";
 			gpios = <&tca6424 4 GPIO_ACTIVE_LOW>;
+			direction = "input";
 		};
 		di03 {
-			gpio-export,name = "di03";
+			label = "di03";
 			gpios = <&tca6424 5 GPIO_ACTIVE_LOW>;
+			direction = "input";
 		};
 		di02 {
-			gpio-export,name = "di02";
+			label = "di02";
 			gpios = <&tca6424 6 GPIO_ACTIVE_LOW>;
+			direction = "input";
 		};
 		di01 {
-			gpio-export,name = "di01";
+			label = "di01";
 			gpios = <&tca6424 7 GPIO_ACTIVE_LOW>;
+			direction = "input";
 		};
 		do01 {
-			gpio-export,name = "do01";
+			label = "do01";
 			gpios = <&tca6424 8 GPIO_ACTIVE_HIGH>;
-			gpio-export,output = <0>;
+			direction = "low";
 		};
 		do02 {
-			gpio-export,name = "do02";
+			label= "do02";
 			gpios = <&tca6424 9 GPIO_ACTIVE_HIGH>;
-			gpio-export,output = <0>;
+			direction = "low";
 		};
 		e2wp {
-			gpio-export,name = "e2wp";
+			label = "e2wp";
 			gpios = <&gpio1 0 GPIO_ACTIVE_HIGH>;
-			gpio-export,output = <1>;
+			direction = "high";
 		};
 		12va-ctl {
-			gpio-export,name = "12va-ctl";
+			label = "12va-ctl";
 			gpios = <&gpio1 8 GPIO_ACTIVE_LOW>;
-			gpio-export,output = <0>;
+			direction = "low";
 		};
 		12vb-ctl {
-			gpio-export,name = "12vb-ctl";
+			label = "12vb-ctl";
 			gpios = <&gpio1 10 GPIO_ACTIVE_LOW>;
-			gpio-export,output = <0>;
+			direction = "low";
 		};
 		12va-det {
-			gpio-export,name = "12vb-det";
+			label = "12vb-det";
 			gpios = <&gpio3 6 0>;
+			direction = "input";
 		};
 		12vb-det {
-			gpio-export,name = "12va-det";
+			label = "12va-det";
 			gpios = <&gpio3 5 0>;
+			direction = "input";
 		};
 		12v-det {
-			gpio-export,name = "12v-det";
+			label = "12v-det";
 			gpios = <&gpio3 4 0>;
+			direction = "input";
 		};
 		fan {
-			gpio-export,name = "fan";
+			label = "fan";
 			gpios = <&gpio0 29 GPIO_ACTIVE_HIGH>;
-			gpio-export,output = <0>;
+			direction = "low";
 		};
 	};
 
