@@ -54,15 +54,21 @@
 
 	leds {
 		compatible = "gpio-leds";
+	};
 
-		// led_work: led-0 {
-		// 	gpios = <&gpio0 RK_PC0 GPIO_ACTIVE_HIGH>;
-		// 	function = LED_FUNCTION_HEARTBEAT;
-		// 	color = <LED_COLOR_ID_BLUE>;
-		// 	linux,default-trigger = "heartbeat";
-		// 	pinctrl-names = "default";
-		// 	pinctrl-0 = <&led_work_en>;
-		// };
+	xbrother-gpios {
+		compatible = "xbrother,gpios";
+		gpios = 
+			<&tca6424 0 GPIO_ACTIVE_LOW>, <&tca6424 1 GPIO_ACTIVE_LOW>,
+			<&tca6424 2 GPIO_ACTIVE_LOW>, <&tca6424 3 GPIO_ACTIVE_LOW>,
+			<&tca6424 4 GPIO_ACTIVE_LOW>, <&tca6424 5 GPIO_ACTIVE_LOW>,
+			<&tca6424 6 GPIO_ACTIVE_LOW>, <&tca6424 7 GPIO_ACTIVE_LOW>;
+		gpio-names = "di08", "di07", "di06", "di05",
+			     "di04", "di03", "di02", "di01";
+		directions = "input", "input", "input", "input",
+			     "input", "input", "input", "input";
+		// pinctrl-names = "default";
+		// pinctrl-0 = <&pinctrl_xbrother_gpios>;
 	};
 
 	

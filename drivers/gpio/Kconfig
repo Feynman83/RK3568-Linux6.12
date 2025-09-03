@@ -819,6 +819,15 @@ config GPIO_XTENSA
 	  Say yes here to support the Xtensa internal GPIO32 IMPWIRE (input)
 	  and EXPSTATE (output) ports.
 
+config GPIO_XBROTHER
+	tristate "Xbrother GPIO sysfs exporter"
+	depends on GPIOLIB && OF
+	help
+	  This driver exports GPIOs defined in Device Tree to sysfs under /sys/xbrother/.
+	  It supports input/output configuration and basic pull-up/down (via pinctrl).
+
+	  If unsure, say N.
+
 config GPIO_ZEVIO
 	bool "LSI ZEVIO SoC memory mapped GPIOs"
 	depends on ARM
