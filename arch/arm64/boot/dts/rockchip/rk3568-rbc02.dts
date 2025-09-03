@@ -56,20 +56,97 @@
 		compatible = "gpio-leds";
 	};
 
-	xbrother-gpios {
+	xbrother-gpio {
 		compatible = "xbrother,gpios";
-		gpios = 
-			<&tca6424 0 GPIO_ACTIVE_LOW>, <&tca6424 1 GPIO_ACTIVE_LOW>,
-			<&tca6424 2 GPIO_ACTIVE_LOW>, <&tca6424 3 GPIO_ACTIVE_LOW>,
-			<&tca6424 4 GPIO_ACTIVE_LOW>, <&tca6424 5 GPIO_ACTIVE_LOW>,
-			<&tca6424 6 GPIO_ACTIVE_LOW>, <&tca6424 7 GPIO_ACTIVE_LOW>;
-		gpio-names = "di08", "di07", "di06", "di05",
-			     "di04", "di03", "di02", "di01";
-		directions = "input", "input", "input", "input",
-			     "input", "input", "input", "input";
-		// pinctrl-names = "default";
-		// pinctrl-0 = <&pinctrl_xbrother_gpios>;
+		status = "okay";
+		sysfs-link  = "xbrother";
+		di08 {
+			name = "di08";
+			gpios = <&tca6424 0 GPIO_ACTIVE_LOW>;
+			direction = "input";
+		};
+		di07 {
+			name = "di07";
+			gpios = <&tca6424 1 GPIO_ACTIVE_LOW>;
+			direction = "input";
+		};
+		di06 {
+			name = "di06";
+			gpios = <&tca6424 2 GPIO_ACTIVE_LOW>;
+			direction = "input";
+		};
+		di05 {
+			name = "di05";
+			gpios = <&tca6424 3 GPIO_ACTIVE_LOW>;
+			direction = "input";
+		};
+		di04 {
+			name = "di04";
+			gpios = <&tca6424 4 GPIO_ACTIVE_LOW>;
+			direction = "input";
+		};
+		di03 {
+			name = "di03";
+			gpios = <&tca6424 5 GPIO_ACTIVE_LOW>;
+			direction = "input";
+		};
+		di02 {
+			name = "di02";
+			gpios = <&tca6424 6 GPIO_ACTIVE_LOW>;
+			direction = "input";
+		};
+		di01 {
+			name = "di01";
+			gpios = <&tca6424 7 GPIO_ACTIVE_LOW>;
+			direction = "input";
+		};
+		do01 {
+			name = "do01";
+			gpios = <&tca6424 8 GPIO_ACTIVE_HIGH>;
+			direction = "low";
+		};
+		do02 {
+			name = "do02";
+			gpios = <&tca6424 9 GPIO_ACTIVE_HIGH>;
+			direction = "low";
+		};
+		e2wp {
+			name = "e2wp";
+			gpios = <&gpio1 0 GPIO_ACTIVE_HIGH>;
+			direction = "high";
+		};
+		12va-ctl {
+			name = "12va-ctl";
+			gpios = <&gpio1 8 GPIO_ACTIVE_LOW>;
+			direction = "low";
+		};
+		12vb-ctl {
+			name = "12vb-ctl";
+			gpios = <&gpio1 10 GPIO_ACTIVE_LOW>;
+			direction = "low";
+		};
+		12vb-det {
+			name = "12vb-det";
+			gpios = <&gpio3 6 0>;
+			direction = "input";
+		};
+		12va-det {
+			name = "12va-det";
+			gpios = <&gpio3 5 0>;
+			direction = "input";
+		};
+		12v-det {
+			name = "12v-det";
+			gpios = <&gpio3 4 0>;
+			direction = "input";
+		};
+		fan {
+			name = "fan";
+			gpios = <&gpio0 29 GPIO_ACTIVE_HIGH>;
+			direction = "low";
+		};
 	};
+
 
 	
 

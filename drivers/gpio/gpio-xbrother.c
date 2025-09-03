@@ -1,17 +1,25 @@
 /*
  * xbrother_gpio_driver.c
  *
- * A Linux kernel module that parses GPIO configurations from Device Tree,
- * requests GPIOs, configures direction and initial output level (if applicable),
- * and exposes them via sysfs under /sys/class/xbrother/<gpio_name>/value.
+ * A Linux kernel module that exports GPIOs defined in Device Tree child nodes
+ * to sysfs using gpiod_export, with support for TCA6424 GPIO expander.
+ * Supports directions: "input", "output", "low", "high".
  *
  * DT example:
  * xbrother-gpios {
  *     compatible = "xbrother,gpios";
- *     gpios = <&gpio0 17 GPIO_ACTIVE_HIGH>,
- *             <&gpio1 18 GPIO_ACTIVE_HIGH>;
- *     gpio-names = "led1", "button1";
- *     directions = "low", "input"; // "input", "output", "low", "high"
+ *     sysfs-link = "xbrother";
+ *     status = "okay";
+ *     gpio-di08 {
+ *         name = "di08";
+ *         gpios = <&tca6424 8 GPIO_ACTIVE_HIGH>;
+ *         direction = "low";
+ *     };
+ *     gpio-di09 {
+ *         name = "di09";
+ *         gpios = <&tca6424 9 GPIO_ACTIVE_HIGH>;
+ *         direction = "input";
+ *     };
  * };
  */
 
@@ -29,159 +37,171 @@
 
 struct xbrother_gpio {
     struct gpio_desc *gpiod;
-    char *name;
-    bool is_output;
-    struct device *dev;
+    const char *name; /* Changed to const char * */
 };
 
 struct xbrother_priv {
     struct platform_device *pdev;
+    struct device *sysfs_dev;
     struct class *class;
     struct xbrother_gpio *gpios;
-    int num_gpios;
-};
-
-// Sysfs attribute for value
-static ssize_t value_show(struct device *dev, struct device_attribute *attr, char *buf)
-{
-    struct xbrother_gpio *gpio = dev_get_drvdata(dev);
-    int val;
-
-    val = gpiod_get_value(gpio->gpiod);
-    if (val < 0)
-        return val;
-
-    return sprintf(buf, "%d\n", val);
-}
-
-static ssize_t value_store(struct device *dev, struct device_attribute *attr,
-                           const char *buf, size_t count)
-{
-    struct xbrother_gpio *gpio = dev_get_drvdata(dev);
-    long val;
-    int ret;
-
-    if (!gpio->is_output) {
-        dev_err(dev, "Cannot write to input GPIO\n");
-        return -EPERM;
-    }
-
-    ret = kstrtol(buf, 10, &val);
-    if (ret)
-        return ret;
-
-    gpiod_set_value(gpio->gpiod, !!val);
-    return count;
-}
-
-static DEVICE_ATTR_RW(value);
-
-static struct attribute *xbrother_attrs[] = {
-    &dev_attr_value.attr,
-    NULL,
-};
-
-static const struct attribute_group xbrother_group = {
-    .attrs = xbrother_attrs,
-};
-
-static const struct attribute_group *xbrother_groups[] = {
-    &xbrother_group,
-    NULL,
+    int gpio_count;
 };
 
 static int xbrother_probe(struct platform_device *pdev)
 {
     struct device *dev = &pdev->dev;
     struct device_node *np = dev->of_node;
+    struct device_node *cnp;
     struct xbrother_priv *priv;
-    const char *dir_str;
-    enum gpiod_flags dflags;
-    int i, ret;
+    const char *sysfs_link = NULL;
+    int i, ret, gpio_count = 0;
 
-    if (!np)
+    if (!np) {
+        dev_err(dev, "No device tree node found\n");
         return -ENODEV;
+    }
 
     priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
     if (!priv)
         return -ENOMEM;
 
     priv->pdev = pdev;
-    priv->num_gpios = of_property_count_u32_elems(np, "gpios") / 3; // Each GPIO has phandle, pin, flags
-    if (priv->num_gpios <= 0) {
-        dev_err(dev, "No GPIOs defined in DT\n");
+
+    // Count child nodes to allocate gpio array
+    for_each_child_of_node(np, cnp) {
+        if (of_device_is_available(cnp))
+            gpio_count++;
+    }
+    if (gpio_count == 0) {
+        dev_err(dev, "No valid GPIO child nodes found\n");
         return -EINVAL;
     }
 
-    priv->gpios = devm_kzalloc(dev, sizeof(struct xbrother_gpio) * priv->num_gpios, GFP_KERNEL);
+    priv->gpios = devm_kzalloc(dev, sizeof(struct xbrother_gpio) * gpio_count, GFP_KERNEL);
     if (!priv->gpios)
         return -ENOMEM;
 
     // Create class
     priv->class = class_create(CLASS_NAME);
-    if (IS_ERR(priv->class))
-        return PTR_ERR(priv->class);
+    if (IS_ERR(priv->class)) {
+        ret = PTR_ERR(priv->class);
+        dev_err(dev, "Failed to create class: %d\n", ret);
+        return ret;
+    }
 
-    for (i = 0; i < priv->num_gpios; i++) {
-        struct xbrother_gpio *gpio = &priv->gpios[i];
+    // Create sysfs device
+    priv->sysfs_dev = device_create(priv->class, dev, MKDEV(0, 0), NULL, "gpio");
+    if (IS_ERR(priv->sysfs_dev)) {
+        ret = PTR_ERR(priv->sysfs_dev);
+        dev_err(dev, "Failed to create sysfs device: %d\n", ret);
+        goto err_class;
+    }
 
-        // Get name
-        ret = of_property_read_string_index(np, "gpio-names", i, (const char **)&gpio->name);
+    // Create sysfs link
+    ret = of_property_read_string(np, "sysfs-link", &sysfs_link);
+    if (ret || !sysfs_link)
+        sysfs_link = CLASS_NAME;
+    ret = sysfs_create_link(NULL, &priv->sysfs_dev->kobj, sysfs_link);
+    if (ret) {
+        dev_err(dev, "Failed to create sysfs link '%s': %d\n", sysfs_link, ret);
+        goto err_device;
+    }
+
+    // Iterate over child nodes
+    i = 0;
+    for_each_child_of_node(np, cnp) {
+        struct xbrother_gpio *gpio;
+        const char *dir_str = NULL;
+        enum gpiod_flags dflags;
+        bool dmc;
+
+        if (!of_device_is_available(cnp)) {
+            dev_info(dev, "Child node %s is disabled, skipping\n", cnp->name);
+            continue;
+        }
+
+        if (i >= gpio_count) {
+            dev_err(dev, "Unexpected child node count\n");
+            ret = -EINVAL;
+            goto err_sysfs;
+        }
+        gpio = &priv->gpios[i];
+
+        // Get GPIO name
+        ret = of_property_read_string(cnp, "name", &gpio->name);
         if (ret) {
-            dev_err(dev, "Failed to read gpio-name at index %d\n", i);
-            goto err_cleanup;
+            dev_err(dev, "Failed to read name for node %s: %d\n", cnp->name, ret);
+            continue;
         }
 
         // Get direction
-        ret = of_property_read_string_index(np, "directions", i, &dir_str);
+        ret = of_property_read_string(cnp, "direction", &dir_str);
         if (ret) {
-            dev_err(dev, "Failed to read direction at index %d\n", i);
-            goto err_cleanup;
+            dev_err(dev, "Failed to read direction for node %s: %d\n", cnp->name, ret);
+            continue;
         }
 
-        // Determine direction and initial value
+        // Set direction flags
         if (!strcmp(dir_str, "input")) {
-            gpio->is_output = false;
             dflags = GPIOD_IN;
         } else if (!strcmp(dir_str, "output") || !strcmp(dir_str, "low")) {
-            gpio->is_output = true;
-            dflags = GPIOD_OUT_LOW; // Default low for "output" and "low"
+            dflags = GPIOD_OUT_LOW;
         } else if (!strcmp(dir_str, "high")) {
-            gpio->is_output = true;
             dflags = GPIOD_OUT_HIGH;
         } else {
-            dev_err(dev, "Invalid direction at index %d: %s\n", i, dir_str);
-            ret = -EINVAL;
-            goto err_cleanup;
+            dev_err(dev, "Invalid direction for node %s: %s\n", cnp->name, dir_str);
+            continue;
         }
-
         // Get GPIO descriptor
-        gpio->gpiod = devm_gpiod_get_index(dev, "gpios", i, dflags);
+        gpio->gpiod = devm_gpiod_get_index(dev, NULL, i, dflags);
         if (IS_ERR(gpio->gpiod)) {
             ret = PTR_ERR(gpio->gpiod);
+            if (ret == -EPROBE_DEFER) {
+                dev_info(dev, "GPIO %s at index %d deferred, retrying later\n", gpio->name, i);
+                goto err_sysfs;
+            }
             dev_err(dev, "Failed to get GPIO %s at index %d: %d\n", gpio->name, i, ret);
-            goto err_cleanup;
+            continue;
         }
 
-        // Create sysfs device
-        gpio->dev = device_create_with_groups(priv->class, dev, MKDEV(0, 0), gpio,
-                                              xbrother_groups, "%s", gpio->name);
-        if (IS_ERR(gpio->dev)) {
-            ret = PTR_ERR(gpio->dev);
-            dev_err(dev, "Failed to create device for %s: %d\n", gpio->name, ret);
-            goto err_cleanup;
+        // Check if direction can change
+        dmc = of_property_read_bool(cnp, "direction-may-change");
+
+        // Export to sysfs
+        ret = gpiod_export(gpio->gpiod, dmc);
+        if (ret) {
+            dev_err(dev, "Failed to export GPIO %s: %d\n", gpio->name, ret);
+            continue;
         }
+
+        // Create sysfs link
+        ret = gpiod_export_link(priv->sysfs_dev, gpio->name, gpio->gpiod);
+        if (ret) {
+            dev_err(dev, "Failed to create GPIO link for %s: %d\n", gpio->name, ret);
+            gpiod_unexport(gpio->gpiod);
+            continue;
+        }
+
+        i++;
     }
 
+    if (i == 0) {
+        dev_err(dev, "No valid GPIOs exported\n");
+        ret = -EINVAL;
+        goto err_sysfs;
+    }
+
+    priv->gpio_count = i;
     platform_set_drvdata(pdev, priv);
-    dev_info(dev, "Xbrother GPIO driver probed with %d GPIOs\n", priv->num_gpios);
+    dev_info(dev, "%d GPIO(s) exported\n", i);
     return 0;
 
-err_cleanup:
-    for (i = 0; i < priv->num_gpios; i++) {
-        if (priv->gpios[i].dev)
-            device_unregister(priv->gpios[i].dev);
-    }
+err_sysfs:
+    sysfs_remove_link(NULL, sysfs_link);
+err_device:
+    device_destroy(priv->class, MKDEV(0, 0));
+err_class:
     class_destroy(priv->class);
     return ret;
 }
@@ -189,12 +209,24 @@ err_cleanup:
 static void xbrother_remove(struct platform_device *pdev)
 {
     struct xbrother_priv *priv = platform_get_drvdata(pdev);
+    const char *sysfs_link = NULL;
+    struct device_node *np = pdev->dev.of_node;
     int i;
 
-    for (i = 0; i < priv->num_gpios; i++) {
-        if (priv->gpios[i].dev)
-            device_unregister(priv->gpios[i].dev);
+    // Unexport GPIOs
+    for (i = 0; i < priv->gpio_count; i++) {
+        if (priv->gpios[i].gpiod)
+            gpiod_unexport(priv->gpios[i].gpiod);
     }
+
+    // Remove sysfs link
+    of_property_read_string(np, "xbrother,sysfs-link", &sysfs_link);
+    if (!sysfs_link)
+        sysfs_link = CLASS_NAME;
+    sysfs_remove_link(NULL, sysfs_link);
+
+    // Clean up device and class
+    device_destroy(priv->class, MKDEV(0, 0));
     class_destroy(priv->class);
 
     dev_info(&pdev->dev, "Xbrother GPIO driver removed\n");
@@ -217,7 +249,8 @@ static struct platform_driver xbrother_driver = {
 
 module_platform_driver(xbrother_driver);
 
-MODULE_AUTHOR("Li Feng");
-MODULE_DESCRIPTION("Xbrother GPIO sysfs exporter");
+MODULE_AUTHOR("Grok");
+MODULE_DESCRIPTION("Xbrother GPIO sysfs exporter with TCA6424 support");
 MODULE_LICENSE("GPL");
 MODULE_VERSION("1.0");
+MODULE_SOFTDEP("pre: pca953x");
