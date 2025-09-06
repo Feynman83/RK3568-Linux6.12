@@ -896,13 +896,38 @@ static int usb_register_bus(struct usb_bus *bus)
 	int result = -E2BIG;
 	int busnum;
 
+	struct device *dev = bus->controller;
+    struct device_node *np = dev ? dev->of_node : NULL; 
+    int requested_busnum = -1; 
+	
 	mutex_lock(&usb_bus_idr_lock);
-	busnum = idr_alloc(&usb_bus_idr, bus, 1, USB_MAXBUS, GFP_KERNEL);
+
+    if (np) {
+        requested_busnum = of_alias_get_id(np, "usb");
+        if (requested_busnum >= 0) {
+            pr_info("USB: Device %s requested fixed busnum %d via alias\n",
+                   dev_name(dev), requested_busnum);
+            busnum = idr_alloc(&usb_bus_idr, bus, requested_busnum, requested_busnum + 1, GFP_KERNEL);
+            if (busnum == requested_busnum) {
+                goto found_slot; 
+            } else {
+                pr_warn("USB: Requested busnum %d for %s is not available (error=%d or already in use). Falling back to dynamic assignment.\n",
+                       requested_busnum, dev_name(dev), busnum);
+                if (busnum != -ENOSPC) {
+                   
+                }
+            }
+        }
+    }
+
+    busnum = idr_alloc(&usb_bus_idr, bus, 1, USB_MAXBUS, GFP_KERNEL);
 	if (busnum < 0) {
 		pr_err("%s: failed to get bus number\n", usbcore_name);
 		goto error_find_busnum;
 	}
-	bus->busnum = busnum;
+
+found_slot:
+    bus->busnum = busnum;
 	mutex_unlock(&usb_bus_idr_lock);
 
 	usb_notify_add_bus(bus);

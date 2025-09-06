@@ -37,12 +37,12 @@
 		ethernet1 = &gmac1;
 		mmc0 = &sdhci;
 		mmc1 = &sdmmc0;
-		usb0 = &usb_host0_ehci;
-		usb1 = &usb_host1_ehci;
-		usb2 = &usb_host0_ohci;
-		usb3 = &usb_host1_ohci;
-		usb4 = &usb_host0_xhci;
-		usb5 = &usb_host1_xhci;
+		usb1 = &usb_host0_ehci;
+		usb2 = &usb_host1_ehci;
+		usb3 = &usb_host0_ohci;
+		usb4 = &usb_host1_ohci;
+		usb5 = &usb_host0_xhci;
+		usb6 = &usb_host1_xhci;
 
 	};
 
