@@ -41,8 +41,8 @@
 		usb2 = &usb_host1_ehci;
 		usb3 = &usb_host0_ohci;
 		usb4 = &usb_host1_ohci;
-		usb5 = &usb_host0_xhci;
-		usb7 = &usb_host1_xhci;
+		usb7 = &usb_host0_xhci;
+		usb5 = &usb_host1_xhci;
 
 	};
 
