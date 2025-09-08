@@ -897,29 +897,63 @@ static int usb_register_bus(struct usb_bus *bus)
 	int busnum;
 
 	struct device *dev = bus->controller;
-    struct device_node *np = dev ? dev->of_node : NULL; 
+    struct device_node *np = NULL;
     int requested_busnum = -1; 
 	
+
 	mutex_lock(&usb_bus_idr_lock);
 
-    if (np) {
-        requested_busnum = of_alias_get_id(np, "usb");
-        if (requested_busnum >= 0) {
-            pr_info("USB: Device %s requested fixed busnum %d via alias\n",
-                   dev_name(dev), requested_busnum);
-            busnum = idr_alloc(&usb_bus_idr, bus, requested_busnum, requested_busnum + 1, GFP_KERNEL);
-            if (busnum == requested_busnum) {
-                goto found_slot; 
-            } else {
-                pr_warn("USB: Requested busnum %d for %s is not available (error=%d or already in use). Falling back to dynamic assignment.\n",
-                       requested_busnum, dev_name(dev), busnum);
-                if (busnum != -ENOSPC) {
-                   
-                }
-            }
-        }
-    }
 
+	// 从当前设备开始，向上遍历父设备查找设备树节点和别名
+	struct device *current_dev = dev;
+	while (current_dev) {
+		np = dev_of_node(current_dev);
+		if (np) {            
+			requested_busnum = of_alias_get_id(np, "usb");
+			if (requested_busnum >= 0) {
+				pr_info("USB: Device %s requested fixed busnum %d via alias (found in device hierarchy)\n",
+					dev_name(dev), requested_busnum);
+				break;
+			}
+		}
+		
+		// 移动到父设备继续查找，确保不会无限循环
+		if (!current_dev->parent || current_dev->parent == current_dev) {
+			break; // 防止无限循环
+		}
+		current_dev = current_dev->parent;
+	}
+
+	if (requested_busnum >= 0) {
+		busnum = idr_alloc(&usb_bus_idr, bus, requested_busnum, requested_busnum + 1, GFP_KERNEL);
+		
+		if (busnum == requested_busnum) {
+			// 成功分配请求的编号
+			goto found_slot;
+		} else if (busnum == -ENOSPC) {
+			// 请求的编号已被占用，从 requested_busnum + 1 开始寻找可用编号
+			pr_info("USB: Requested busnum %d is already in use, trying from %d\n",
+				requested_busnum, requested_busnum + 1);
+			
+			// 从 requested_busnum + 1 开始寻找可用编号
+			busnum = idr_alloc(&usb_bus_idr, bus, requested_busnum + 1, 0, GFP_KERNEL);
+			if (busnum >= 0) {
+				// 成功找到可用编号
+				pr_info("USB: Allocated busnum %d for %s\n", busnum, dev_name(dev));
+				goto found_slot;
+			} else {
+				// 从 requested_busnum + 1 开始也没有找到可用编号
+				pr_warn("USB: Failed to allocate busnum from %d for %s (error=%d)\n",
+					requested_busnum + 1, dev_name(dev), busnum);
+				// 继续执行动态分配
+			}
+		} else {
+			// 其他错误
+			pr_warn("USB: Failed to allocate requested busnum %d for %s (error=%d)\n",
+				requested_busnum, dev_name(dev), busnum);
+			// 继续执行动态分配
+		}
+	}
     busnum = idr_alloc(&usb_bus_idr, bus, 1, USB_MAXBUS, GFP_KERNEL);
 	if (busnum < 0) {
 		pr_err("%s: failed to get bus number\n", usbcore_name);
