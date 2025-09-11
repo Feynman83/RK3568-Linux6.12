@@ -42,8 +42,8 @@
 		serial4 = &uart5;
 		serial5 = &uart8;
 		serial6 = &uart9;
-		ethernet0 = &gmac0;
-		ethernet1 = &gmac1;
+		ethernet0 = &gmac1;
+		ethernet1 = &gmac0;
 		mmc0 = &sdhci;
 		mmc1 = &sdmmc0;
 		usb1 = &usb_host0_ehci;
