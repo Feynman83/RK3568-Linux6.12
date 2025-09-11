@@ -26,6 +26,15 @@
 		/delete-property/ serial7;
 		/delete-property/ serial8;
 		/delete-property/ serial9;
+		/delete-property/ i2c1;
+		/delete-property/ i2c2;
+		/delete-property/ i2c3;
+		/delete-property/ i2c4;
+		/delete-property/ i2c5;
+		/delete-property/ spi0;
+		/delete-property/ spi1;
+		/delete-property/ spi2;
+		/delete-property/ spi3;
 		serial0 = &uart2;
 		serial1 = &uart0;
 		serial2 = &uart3;
@@ -43,7 +52,9 @@
 		usb4 = &usb_host1_ohci;
 		usb7 = &usb_host0_xhci;
 		usb5 = &usb_host1_xhci;
-
+		i2c1 = &gpioi2c1;
+		i2c2 = &gpioi2c2;
+		i2c5 = &gpioi2c5;
 	};
 
 	chosen: chosen {
@@ -154,6 +165,52 @@
 		};
 	};
 
+	gpioi2c1: i2c-1 {
+		status = "okay";
+		compatible = "i2c-gpio";
+		sda-gpios = <&gpio0 RK_PB3 GPIO_ACTIVE_HIGH>;
+		scl-gpios = <&gpio0 RK_PB4 GPIO_ACTIVE_HIGH >;
+		pinctrl-names = "default";
+		pinctrl-0 = <&i2c1_xfer>;
+		i2c-gpio,delay-us = <5>;	/* ~100 kHz */
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		eeprom@50 {
+			compatible = "atmel,24c04";
+			reg = <0x50>;
+			pagesize = <16>;
+		};
+	};
+
+	gpioi2c2: i2c-2 {
+		status = "okay";
+		compatible = "i2c-gpio";
+		sda-gpios = <&gpio0 RK_PB6 GPIO_ACTIVE_HIGH>;
+		scl-gpios = <&gpio0 RK_PB5 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&i2c2m0_xfer>;
+		i2c-gpio,delay-us = <5>;	/* ~100 kHz */
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+	gpioi2c5: i2c-5 {
+		status = "okay";
+		compatible = "i2c-gpio";
+		sda-gpios = <&gpio3 RK_PB4 GPIO_ACTIVE_HIGH>;
+		scl-gpios = <&gpio3 RK_PB3 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&i2c5m0_xfer>;
+		i2c-gpio,delay-us = <5>;	/* ~100 kHz */
+		#address-cells = <1>;
+		#size-cells = <0>;
+		hym8563: hym8563@51 {
+			compatible = "haoyu,hym8563";
+			reg = <0x51>;
+		};
+	};
+
 	vcc3v3_sys: vcc3v3-sys {
 		compatible = "regulator-fixed";
 		regulator-name = "vcc3v3_sys";
@@ -186,22 +243,48 @@
 
 	
 };
+/delete-node/ &pdm;
+/delete-node/ &spdif;
+/delete-node/ &i2c3;
+/delete-node/ &i2c4;
+/delete-node/ &sfc;
+/delete-node/ &i2s0_8ch;
+/delete-node/ &i2s1_8ch;
+/delete-node/ &i2s2_2ch;
+/delete-node/ &i2s3_2ch;
+/delete-node/ &spi0;
+/delete-node/ &spi1;
+/delete-node/ &spi2;
+/delete-node/ &spi3;
+/delete-node/ &can0;
+/delete-node/ &can1;
+/delete-node/ &can2;
+/delete-node/ &hdmi_sound;
+/delete-node/ &hdmi;
+/delete-node/ &pcie2x1;
+/delete-node/ &pcie3x1;
+/delete-node/ &pcie3x2;
+/delete-node/ &pwm0;
+/delete-node/ &pwm1;
+/delete-node/ &pwm2;
+/delete-node/ &pwm3;
+/delete-node/ &pwm4;
+/delete-node/ &pwm5;
+/delete-node/ &pwm6;
+/delete-node/ &pwm7;
+/delete-node/ &pwm8;
+/delete-node/ &pwm9;
+/delete-node/ &pwm10;
+/delete-node/ &pwm11;
+/delete-node/ &pwm12;
+/delete-node/ &pwm13;
+/delete-node/ &pwm14;
+/delete-node/ &pwm15;
 
 &scmi {
 	status = "disabled";
 };
 
-&combphy0 {
-	status = "okay";
-};
-
-&combphy1 {
-	status = "okay";
-};
-
-&combphy2 {
-	status = "okay";
-};
 
 &cpu0 {
 	cpu-supply = <&vdd_cpu>;
@@ -219,40 +302,56 @@
 	cpu-supply = <&vdd_cpu>;
 };
 
-&gmac0 {
-	assigned-clocks = <&cru SCLK_GMAC0_RX_TX>, <&cru SCLK_GMAC0>;
-	assigned-clock-parents = <&cru SCLK_GMAC0_RGMII_SPEED>;
-	assigned-clock-rates = <0>, <125000000>;
-	clock_in_out = "output";
-	phy-handle = <&rgmii_phy0>;
-	phy-mode = "rgmii-id";
-	pinctrl-names = "default";
-	pinctrl-0 = <&gmac0_miim
-		     &gmac0_tx_bus2
-		     &gmac0_rx_bus2
-		     &gmac0_rgmii_clk
-		     &gmac0_rgmii_bus>;
-	tx_delay = <0x0>;
-	rx_delay = <0x0>;
+&uart0 {
+	status = "okay";
+	pinctrl-0 = <&uart0_xfer &com1_de>;
+	rs485-term-gpios = <&gpio0 RK_PC3 GPIO_ACTIVE_HIGH>;
+	rs485-rx-during-tx;
+	linux,rs485-enabled-at-boot-time;
+};
+
+&uart2 {
 	status = "okay";
 };
 
-&gmac1 {
-	assigned-clocks = <&cru SCLK_GMAC1_RX_TX>, <&cru SCLK_GMAC1>;
-	assigned-clock-parents = <&cru SCLK_GMAC1_RGMII_SPEED>;
-	assigned-clock-rates = <0>, <125000000>;
-	clock_in_out = "output";
-	phy-handle = <&rgmii_phy1>;
-	phy-mode = "rgmii-id";
-	pinctrl-names = "default";
-	pinctrl-0 = <&gmac1m1_miim
-		     &gmac1m1_tx_bus2
-		     &gmac1m1_rx_bus2
-		     &gmac1m1_rgmii_clk
-		     &gmac1m1_rgmii_bus>;
-	tx_delay = <0x0>;
-	rx_delay = <0x0>;
+&uart3 {
 	status = "okay";
+	pinctrl-0 = <&uart3m1_xfer &com2_de>;
+	rs485-term-gpios = <&gpio3 RK_PA4 GPIO_ACTIVE_HIGH>;
+	rs485-rx-during-tx;
+	linux,rs485-enabled-at-boot-time;
+};
+
+&uart4 {
+	status = "okay";
+	pinctrl-0 = <&uart4m1_xfer &com3_de>;
+	rs485-term-gpios = <&gpio3 RK_PB6 GPIO_ACTIVE_HIGH>;
+	rs485-rx-during-tx;
+	linux,rs485-enabled-at-boot-time;
+};
+
+&uart5 {
+	status = "okay";
+	pinctrl-0 = <&uart5m1_xfer &com4_de>;
+	rs485-term-gpios = <&gpio4 RK_PD2 GPIO_ACTIVE_HIGH>;
+	rs485-rx-during-tx;
+	linux,rs485-enabled-at-boot-time;
+};
+
+&uart8 {
+	status = "okay";
+	pinctrl-0 = <&uart8m1_xfer &com5_de>;
+	rs485-term-gpios = <&gpio3 RK_PA3 GPIO_ACTIVE_HIGH>;
+	rs485-rx-during-tx;
+	linux,rs485-enabled-at-boot-time;
+};
+
+&uart9 {
+	status = "okay";
+	pinctrl-0 = <&uart9m1_xfer &com6_de>;
+	rs485-term-gpios = <&gpio4 RK_PC2 GPIO_ACTIVE_HIGH>;
+	rs485-rx-during-tx;
+	linux,rs485-enabled-at-boot-time;
 };
 
 
@@ -289,15 +388,10 @@
 		reg = <0x20>;
 		interrupt-parent = <&gpio0>;
 		interrupts = <RK_PA3 IRQ_TYPE_LEVEL_LOW>;
-		assigned-clocks = <&cru I2S1_MCLKOUT_TX>;
-		assigned-clock-parents = <&cru CLK_I2S1_8CH_TX>;
 		#clock-cells = <1>;
-		clock-names = "mclk";
-		clocks = <&cru I2S1_MCLKOUT_TX>;
 		pinctrl-names = "default";
-		pinctrl-0 = <&pmic_int>, <&i2s1m0_mclk>;
+		pinctrl-0 = <&pmic_int>;
 		rockchip,system-power-controller;
-		#sound-dai-cells = <0>;
 		vcc1-supply = <&vcc3v3_sys>;
 		vcc2-supply = <&vcc3v3_sys>;
 		vcc3-supply = <&vcc3v3_sys>;
@@ -488,16 +582,15 @@
 
 			vcc3v3_sd: SWITCH_REG2 {
 				regulator-name = "vcc3v3_sd";
-
+				regulator-always-on;
+				regulator-boot-on;
 				regulator-state-mem {
 					regulator-off-in-suspend;
 				};
 			};
 		};
 
-		codec {
-			rockchip,mic-in-differential;
-		};
+		
 	};
 };
 
@@ -508,27 +601,7 @@
 		/* i2c1_sda */
 		<0 RK_PB4 RK_FUNC_GPIO &pcfg_pull_up_drv_level_15>;
 };
-&i2c1 {
-	status = "okay";
-	compatible = "i2c-gpio";
-	sda-gpios = <&gpio0 11 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>;
-	scl-gpios = <&gpio0 12 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>;
-	pinctrl-names = "default";
-	pinctrl-0 = <&i2c1_xfer>;
-	i2c-gpio,delay-us = <5>;	/* ~100 kHz */
-	#address-cells = <1>;
-	#size-cells = <0>;
 
-	eeprom@50 {
-		compatible = "atmel,24c04";
-		reg = <0x50>;
-		pagesize = <16>;
-	};
-	ds1307: rtc@68 {
-		compatible = "dallas,ds1307";
-		reg = <0x68>;
-	};
-};
 
 &i2c2m0_xfer {
 	rockchip,pins =
@@ -537,18 +610,7 @@
 		/* i2c1_sda */
 		<0 RK_PB6 RK_FUNC_GPIO &pcfg_pull_up_drv_level_15>;
 };
-&i2c2 {
-	status = "okay";
-	compatible = "i2c-gpio";
-	sda-gpios = <&gpio0 14 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>;
-	scl-gpios = <&gpio0 13 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>;
-	pinctrl-names = "default";
-	pinctrl-0 = <&i2c2m0_xfer>;
-	i2c-gpio,delay-us = <5>;	/* ~100 kHz */
-	#address-cells = <1>;
-	#size-cells = <0>;
-	
-};
+
 
 &i2c5m0_xfer {
 	rockchip,pins =
@@ -558,56 +620,13 @@
 		<3 RK_PB4 RK_FUNC_GPIO &pcfg_pull_up_drv_level_15>;
 };
 
-&i2c5 {
-	status = "okay";
-	compatible = "i2c-gpio";
-	sda-gpios = <&gpio3 12 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>;
-	scl-gpios = <&gpio3 11 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>;
-	pinctrl-names = "default";
-	pinctrl-0 = <&i2c5m0_xfer>;
-	i2c-gpio,delay-us = <5>;	/* ~100 kHz */
-	#address-cells = <1>;
-	#size-cells = <0>;
-	hym8563: hym8563@51 {
-		compatible = "haoyu,hym8563";
-		reg = <0x51>;
-	};
-};
-
-&mdio0 {
-	rgmii_phy0: ethernet-phy@0 {
-		max-speed = <100>;
-		compatible = "ethernet-phy-ieee802.3-c22";
-		reg = <0x0>;
-		reset-assert-us = <20000>;
-		reset-deassert-us = <100000>;
-		reset-gpios = <&gpio2 RK_PD3 GPIO_ACTIVE_LOW>;
-	};
-};
-
-&mdio1 {
-	rgmii_phy1: ethernet-phy@0 {
-		compatible = "ethernet-phy-ieee802.3-c22";
-		reg = <0x0>;
-		reset-assert-us = <20000>;
-		reset-deassert-us = <100000>;
-		reset-gpios = <&gpio2 RK_PD1 GPIO_ACTIVE_LOW>;
-	};
-};
-
 &pinctrl {
 	
 	pmic {
-		pmic_int: pmic_int {
-			rockchip,pins =
-				<0 RK_PA3 RK_FUNC_GPIO &pcfg_pull_up>;
+		pmic_int: pmic-int {
+			rockchip,pins = <0 RK_PA3 RK_FUNC_GPIO &pcfg_pull_up>;
 		};
 	};
-
-	fan_en: fan_en {
-		rockchip,pins = <0 RK_PD5 RK_FUNC_GPIO &pcfg_pull_up>;
-	};
-
 	rs485 {
 		com1_de: com1_de {
 			rockchip,pins = <0 RK_PC3 RK_FUNC_GPIO &pcfg_pull_up>;
@@ -644,11 +663,6 @@
 	status = "okay";
 };
 
-&saradc {
-	vref-supply = <&vcca_1v8>;
-	status = "okay";
-};
-
 &sdhci {
 	bus-width = <8>;
 	max-frequency = <200000000>;
@@ -661,76 +675,88 @@
 &sdmmc0 {
 	bus-width = <4>;
 	cap-sd-highspeed;
+	cap-mmc-highspeed;
+	no-sdio;
+	no-mmc;
 	broken-cd;
 	disable-wp;
-	max-frequency = <150000000>;
+	sd-uhs-sdr104;
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdmmc0_bus4 &sdmmc0_clk &sdmmc0_cmd>;
-	sd-uhs-sdr12;
-	sd-uhs-sdr25;
-	sd-uhs-sdr50;
-	sd-uhs-ddr50;
-	sd-uhs-sdr104;
 	vmmc-supply = <&vcc3v3_sd>;
 	vqmmc-supply = <&vccio_sd>;
 	status = "okay";
 };
 
-&tsadc {
-	rockchip,hw-tshut-mode = <1>;
-	rockchip,hw-tshut-polarity = <0>;
+
+
+
+&mdio0 {
+	rgmii_phy0: ethernet-phy@0 {
+		max-speed = <100>;
+		compatible = "ethernet-phy-ieee802.3-c22";
+		reg = <0x0>;
+		reset-assert-us = <20000>;
+		reset-deassert-us = <100000>;
+		reset-gpios = <&gpio2 RK_PD3 GPIO_ACTIVE_LOW>;
+	};
+};
+
+&mdio1 {
+	rgmii_phy1: ethernet-phy@0 {
+		compatible = "ethernet-phy-ieee802.3-c22";
+		reg = <0x0>;
+		reset-assert-us = <20000>;
+		reset-deassert-us = <100000>;
+		reset-gpios = <&gpio2 RK_PD1 GPIO_ACTIVE_LOW>;
+	};
+};
+
+&gmac0 {
+	assigned-clocks = <&cru SCLK_GMAC0_RX_TX>, <&cru SCLK_GMAC0>;
+	assigned-clock-parents = <&cru SCLK_GMAC0_RGMII_SPEED>;
+	assigned-clock-rates = <0>, <125000000>;
+	clock_in_out = "output";
+	phy-handle = <&rgmii_phy0>;
+	phy-mode = "rgmii-id";
+	pinctrl-names = "default";
+	pinctrl-0 = <&gmac0_miim
+		     &gmac0_tx_bus2
+		     &gmac0_rx_bus2
+		     &gmac0_rgmii_clk
+		     &gmac0_rgmii_bus>;
+	tx_delay = <0x0>;
+	rx_delay = <0x0>;
 	status = "okay";
 };
 
-&uart0 {
+&gmac1 {
+	assigned-clocks = <&cru SCLK_GMAC1_RX_TX>, <&cru SCLK_GMAC1>;
+	assigned-clock-parents = <&cru SCLK_GMAC1_RGMII_SPEED>;
+	assigned-clock-rates = <0>, <125000000>;
+	clock_in_out = "output";
+	phy-handle = <&rgmii_phy1>;
+	phy-mode = "rgmii-id";
+	pinctrl-names = "default";
+	pinctrl-0 = <&gmac1m1_miim
+		     &gmac1m1_tx_bus2
+		     &gmac1m1_rx_bus2
+		     &gmac1m1_rgmii_clk
+		     &gmac1m1_rgmii_bus>;
+	tx_delay = <0x0>;
+	rx_delay = <0x0>;
 	status = "okay";
-	pinctrl-0 = <&uart0_xfer &com1_de>;
-	rs485-term-gpios = <&gpio0 RK_PC3 GPIO_ACTIVE_HIGH>;
-	rs485-rx-during-tx;
-	linux,rs485-enabled-at-boot-time;
 };
 
-&uart3 {
+&combphy0 {
 	status = "okay";
-	pinctrl-0 = <&uart3m1_xfer &com2_de>;
-	rs485-term-gpios = <&gpio3 RK_PA4 GPIO_ACTIVE_HIGH>;
-	rs485-rx-during-tx;
-	linux,rs485-enabled-at-boot-time;
 };
 
-&uart4 {
+&combphy1 {
 	status = "okay";
-	pinctrl-0 = <&uart4m1_xfer &com3_de>;
-	rs485-term-gpios = <&gpio3 RK_PB6 GPIO_ACTIVE_HIGH>;
-	rs485-rx-during-tx;
-	linux,rs485-enabled-at-boot-time;
 };
 
-&uart5 {
-	status = "okay";
-	pinctrl-0 = <&uart5m1_xfer &com4_de>;
-	rs485-term-gpios = <&gpio4 RK_PD2 GPIO_ACTIVE_HIGH>;
-	rs485-rx-during-tx;
-	linux,rs485-enabled-at-boot-time;
-};
-
-&uart8 {
-	status = "okay";
-	pinctrl-0 = <&uart8m1_xfer &com5_de>;
-	rs485-term-gpios = <&gpio3 RK_PA3 GPIO_ACTIVE_HIGH>;
-	rs485-rx-during-tx;
-	linux,rs485-enabled-at-boot-time;
-};
-
-&uart9 {
-	status = "okay";
-	pinctrl-0 = <&uart9m1_xfer &com6_de>;
-	rs485-term-gpios = <&gpio4 RK_PC2 GPIO_ACTIVE_HIGH>;
-	rs485-rx-during-tx;
-	linux,rs485-enabled-at-boot-time;
-};
-
-&uart2 {
+&combphy2 {
 	status = "okay";
 };
 
