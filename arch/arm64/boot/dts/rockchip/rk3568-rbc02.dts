@@ -144,13 +144,13 @@
 			direction = "low";
 		};
 		12va-det {
-			label = "12vb-det";
-			gpios = <&gpio3 6 GPIO_ACTIVE_HIGH>;
+			label = "12va-det";
+			gpios = <&gpio3 5 GPIO_ACTIVE_HIGH>;
 			direction = "input";
 		};
 		12vb-det {
-			label = "12va-det";
-			gpios = <&gpio3 5 GPIO_ACTIVE_HIGH>;
+			label = "12vb-det";
+			gpios = <&gpio3 6 GPIO_ACTIVE_HIGH>;
 			direction = "input";
 		};
 		12v-det {
