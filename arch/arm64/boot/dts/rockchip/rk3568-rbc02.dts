@@ -72,6 +72,11 @@
 
 	leds {
 		compatible = "gpio-leds";
+		heartbeat: heartbeat {
+			label = "heartbeat";
+			gpios = <&gpio4 RK_PC4 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "heartbeat";
+		};
 	};
 
 	xbrother_gpio {
@@ -243,6 +248,8 @@
 
 	
 };
+
+
 /delete-node/ &pdm;
 /delete-node/ &spdif;
 /delete-node/ &i2c3;
@@ -280,6 +287,7 @@
 /delete-node/ &pwm13;
 /delete-node/ &pwm14;
 /delete-node/ &pwm15;
+
 
 &scmi {
 	status = "disabled";
@@ -621,7 +629,11 @@
 };
 
 &pinctrl {
-	
+	led {
+		led_heartbeat: led-heartbeat {
+			rockchip,pins = <4 RK_PC4 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+	};
 	pmic {
 		pmic_int: pmic-int {
 			rockchip,pins = <0 RK_PA3 RK_FUNC_GPIO &pcfg_pull_up>;
