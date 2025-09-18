@@ -289,11 +289,6 @@
 /delete-node/ &pwm15;
 
 
-&scmi {
-	status = "disabled";
-};
-
-
 &cpu0 {
 	cpu-supply = <&vdd_cpu>;
 };
