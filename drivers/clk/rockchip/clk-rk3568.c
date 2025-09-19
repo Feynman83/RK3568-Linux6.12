@@ -162,6 +162,7 @@ static struct rockchip_pll_rate_table rk3568_pll_rates[] = {
 }
 
 static struct rockchip_cpuclk_rate_table rk3568_cpuclk_rates[] __initdata = {
+	RK3568_CPUCLK_RATE(1992000000, 0, 1, 7, 7, 7, 7), /* Added 1.992 GHz */
 	RK3568_CPUCLK_RATE(1800000000, 0, 1, 7, 7, 7, 7),
 	RK3568_CPUCLK_RATE(1704000000, 0, 1, 7, 7, 7, 7),
 	RK3568_CPUCLK_RATE(1608000000, 0, 1, 5, 5, 5, 5),
