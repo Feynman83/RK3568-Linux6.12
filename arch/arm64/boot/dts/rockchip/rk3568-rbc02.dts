@@ -9,8 +9,6 @@
 #include <dt-bindings/leds/common.h>
 #include <dt-bindings/pinctrl/rockchip.h>
 #include <dt-bindings/soc/rockchip,vop2.h>
-#include <dt-bindings/clock/rk3568-cru.h>
-#include <dt-bindings/power/rk3568-power.h>
 #include "rk3568.dtsi"
 
 / {
@@ -290,41 +288,26 @@
 /delete-node/ &pwm14;
 /delete-node/ &pwm15;
 
- /* 禁用 SCMI */
+
 &scmi {
 	status = "disabled";
 };
-&cru {
-	assigned-clocks = <&pmucru CLK_RTC_32K>, <&cru PLL_GPLL>, <&pmucru PLL_PPLL>, <&cru PLL_APLL>, <&cru ARMCLK>;
-    assigned-clock-rates = <32768>, <1200000000>, <200000000>, <1800000000>, <1800000000>;
-};
+
 
 &cpu0 {
 	cpu-supply = <&vdd_cpu>;
-	clocks = <&cru ARMCLK>;
-    power-domains = <&power RK3568_PD_CPU_0>;
-	/delete-property/ operating-points-v2;
 };
 
 &cpu1 {
 	cpu-supply = <&vdd_cpu>;
-	clocks = <&cru ARMCLK>;
-    power-domains = <&power RK3568_PD_CPU_1>;
-	/delete-property/ operating-points-v2;
 };
 
 &cpu2 {
 	cpu-supply = <&vdd_cpu>;
-	clocks = <&cru ARMCLK>;
-    power-domains = <&power RK3568_PD_CPU_2>;
-	/delete-property/ operating-points-v2;
 };
 
 &cpu3 {
 	cpu-supply = <&vdd_cpu>;
-	clocks = <&cru ARMCLK>;
-    power-domains = <&power RK3568_PD_CPU_3>;
-	/delete-property/ operating-points-v2;
 };
 
 &uart0 {
@@ -398,7 +381,7 @@
 		regulator-name = "vdd_cpu";
 		regulator-always-on;
 		regulator-boot-on;
-		regulator-min-microvolt = <1150000>;
+		regulator-min-microvolt = <800000>;
 		regulator-max-microvolt = <1150000>;
 		regulator-ramp-delay = <2300>;
 		vin-supply = <&vcc5v0_sys>;
