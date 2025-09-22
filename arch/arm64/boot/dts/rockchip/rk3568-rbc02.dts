@@ -830,3 +830,7 @@
 &sata2 {
 	status = "okay";
 };
+
+&tsadc {
+	status = "okay";
+};
