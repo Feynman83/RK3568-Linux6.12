@@ -138,6 +138,11 @@
 			gpios = <&gpio1 0 GPIO_ACTIVE_HIGH>;
 			direction = "high";
 		};
+		capen {
+			label = "capen";
+			gpios = <&gpio1 1 GPIO_ACTIVE_HIGH>;
+			direction = "high";
+		};
 		12va-ctl {
 			label = "12va-ctl";
 			gpios = <&gpio1 8 GPIO_ACTIVE_LOW>;
