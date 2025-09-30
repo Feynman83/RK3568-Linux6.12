@@ -86,42 +86,42 @@
 		di08 {
 			label = "di08";
 			gpios = <&tca6424 0 GPIO_ACTIVE_LOW>;
-			direction = "input";
+			direction = "input0";
 		};
 		di07 {
 			label = "di07";
 			gpios = <&tca6424 1 GPIO_ACTIVE_LOW>;
-			direction = "input";
+			direction = "input0";
 		};
 		di06 {
 			label = "di06";
 			gpios = <&tca6424 2 GPIO_ACTIVE_LOW>;
-			direction = "input";
+			direction = "input0";
 		};
 		di05 {
 			label = "di05";
 			gpios = <&tca6424 3 GPIO_ACTIVE_LOW>;
-			direction = "input";
+			direction = "input0";
 		};
 		di04 {
 			label = "di04";
 			gpios = <&tca6424 4 GPIO_ACTIVE_LOW>;
-			direction = "input";
+			direction = "input0";
 		};
 		di03 {
 			label = "di03";
 			gpios = <&tca6424 5 GPIO_ACTIVE_LOW>;
-			direction = "input";
+			direction = "input0";
 		};
 		di02 {
 			label = "di02";
 			gpios = <&tca6424 6 GPIO_ACTIVE_LOW>;
-			direction = "input";
+			direction = "input0";
 		};
 		di01 {
 			label = "di01";
 			gpios = <&tca6424 7 GPIO_ACTIVE_LOW>;
-			direction = "input";
+			direction = "input0";
 		};
 		do01 {
 			label = "do01";
@@ -151,17 +151,17 @@
 		12va-det {
 			label = "12va-det";
 			gpios = <&gpio3 5 GPIO_ACTIVE_HIGH>;
-			direction = "input";
+			direction = "input1";
 		};
 		12vb-det {
 			label = "12vb-det";
 			gpios = <&gpio3 6 GPIO_ACTIVE_HIGH>;
-			direction = "input";
+			direction = "input1";
 		};
 		12v-det {
 			label = "12v-det";
 			gpios = <&gpio3 7 GPIO_ACTIVE_HIGH>;
-			direction = "input";
+			direction = "input1";
 		};
 		fan {
 			label = "fan";
