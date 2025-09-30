@@ -1144,7 +1144,7 @@ static int pca953x_probe(struct i2c_client *client)
 	ret = pca953x_irq_setup(chip, irq_base);
 	if (ret)
 		return ret;
-
+	chip->gpio_chip.base = 487;
 	return devm_gpiochip_add_data(dev, &chip->gpio_chip, chip);
 }
 
