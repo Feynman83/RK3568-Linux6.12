@@ -146,12 +146,12 @@
 		12va-ctl {
 			label = "12va-ctl";
 			gpios = <&gpio1 8 GPIO_ACTIVE_LOW>;
-			direction = "low";
+			direction = "low0";
 		};
 		12vb-ctl {
 			label = "12vb-ctl";
 			gpios = <&gpio1 10 GPIO_ACTIVE_LOW>;
-			direction = "low";
+			direction = "low0";
 		};
 		12va-det {
 			label = "12va-det";

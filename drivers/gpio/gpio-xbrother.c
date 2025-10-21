@@ -72,6 +72,10 @@ static int __init of_gpio_export_probe(struct platform_device *pdev)
 				flags |= GPIOF_OUT_INIT_HIGH;
 			} else if (strcmp(direction, "low") == 0) {
 				flags |= GPIOF_OUT_INIT_LOW;
+			} else if (strcmp(direction, "high0") == 0) {
+				flags |= (GPIOF_OUT_INIT_HIGH | GPIOF_ACTIVE_LOW);
+			} else if (strcmp(direction, "low0") == 0) {
+				flags |= (GPIOF_OUT_INIT_LOW | GPIOF_ACTIVE_LOW);
 			} else if (strcmp(direction, "input0") == 0) {
 				flags |= (GPIOF_IN | GPIOF_ACTIVE_LOW);
 			} else if (strcmp(direction, "input1") == 0) {
